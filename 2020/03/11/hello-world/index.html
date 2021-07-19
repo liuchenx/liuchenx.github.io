@@ -1,0 +1,202 @@
+<!DOCTYPE html><html lang="en" class="loading"><head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hello World - LIU YICHEN</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate">
+
+    <!-- <link rel="shortcut icon" href=" /img/favicon.ico" /> -->
+    
+<link rel="stylesheet" href="/css/scrollbar.css">
+
+    <meta name="keywords" content="live,"> 
+    <meta name="description" content="好目睫之利者，利在害中而不弃；好终身之利者，利在目睫而不为。 —— By 庄元臣                               
+​                          ,"> 
+    <meta name="author" content="liuyichen"> 
+    <link rel="alternative" href="atom.xml" title="LIU YICHEN" type="application/atom+xml"> 
+    <link rel="icon" href="/img/favicon.ico"> 
+    
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+
+    
+<link rel="stylesheet" href="/css/diaspora.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"><link rel="stylesheet" href="/css/prism-material-oceanic.css" type="text/css"></head>
+
+<body class="loading">
+    <span id="config-title" style="display:none">LIU YICHEN</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <a class="iconfont icon-home image-icon" href="javascript:;" data-url="https://blog.liuyichen.me"></a>
+    <div title="播放/暂停" class="iconfont icon-play"></div>
+    <h3 class="subtitle">Hello World</h3>
+    <div class="social">
+        <div>
+            <div class="share">
+                <a title="获取二维码" class="iconfont icon-scan" href="javascript:;"></a>
+            </div>
+            <div id="qr"></div>
+        </div>
+    </div>
+    <div class="scrollbar"></div>
+</div>
+
+    <div class="section">
+        <div class="article">
+    <div class="main">
+        <h1 class="title">Hello World</h1>
+        <div class="stuff">
+            <span>三月 11, 2020</span>
+            
+
+        </div>
+        <div class="content markdown">
+            <p>好目睫之利者，利在害中而不弃；好终身之利者，利在目睫而不为。 —— By 庄元臣                               </p>
+<p>​                                                                                                                                                               </p>
+<p>​                                                                                                                                                                </p>
+<p>​       </p>
+<p>万物从hello world开始, 由于电脑重装,之前博客都被洗掉, 所以重新通过hexo搭建了一套.</p>
+<p>当然这次吸取教训,将博客代码放在git上, 正好发现腾讯coding提供持续集成功能, 所以代码就放到了coding上, 具体的思路是, 本地提交代码->coding->持续集成生成静态页面->githubpages->展示, 这里也可以直接使用coding的pages功能.</p>
+<h2 id="配置持续集成"><a href="#配置持续集成" class="headerlink" title="配置持续集成"></a>配置持续集成</h2><p><img src="/2020/03/11/hello-world/image-20200312131721666.png" alt="image-20200312131721666"></p>
+<h3 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h3><p>在coding构建一栏,添加构建计划,代码源选择coding, 使用静态配置的Jenkinsfile, 触发条件选择推送触发</p>
+<h3 id="Jenkinsfile文件配置"><a href="#Jenkinsfile文件配置" class="headerlink" title="Jenkinsfile文件配置"></a>Jenkinsfile文件配置</h3><h4 id="分支拉取"><a href="#分支拉取" class="headerlink" title="分支拉取"></a>分支拉取</h4><pre class=" language-groovy"><code class="language-groovy"><span class="token function">stage</span><span class="token punctuation">(</span><span class="token string">'检出'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    steps <span class="token punctuation">{</span>
+        <span class="token function">checkout</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token punctuation">$</span><span class="token keyword">class</span><span class="token punctuation">:</span> <span class="token string">'GitSCM'</span><span class="token punctuation">,</span> branches<span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token punctuation">[</span>name<span class="token punctuation">:</span> env<span class="token operator">.</span>GIT_BUILD_REF<span class="token punctuation">]</span><span class="token punctuation">]</span><span class="token punctuation">,</span> userRemoteConfigs<span class="token punctuation">:</span> <span class="token punctuation">[</span><span class="token punctuation">[</span>
+            url<span class="token punctuation">:</span> env<span class="token operator">.</span>GIT_REPO_URL<span class="token punctuation">,</span>
+            credentialsId<span class="token punctuation">:</span> env<span class="token operator">.</span>CREDENTIALS_ID
+          <span class="token punctuation">]</span><span class="token punctuation">]</span>
+        <span class="token punctuation">]</span><span class="token punctuation">)</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<h4 id="配置主题拉取"><a href="#配置主题拉取" class="headerlink" title="配置主题拉取"></a>配置主题拉取</h4><p>由于我是将主题作为git的submodule引入的所以拉取博客代码后需要同步主题git的module:</p>
+<pre class=" language-bash"><code class="language-bash">$ <span class="token function">git</span> submodule init
+$ <span class="token function">git</span> submodule update</code></pre>
+<p>持续集成配置</p>
+<pre class=" language-groovy"><code class="language-groovy"><span class="token function">stage</span><span class="token punctuation">(</span><span class="token string">'构建'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    steps <span class="token punctuation">{</span>
+        echo <span class="token string">'构建中...'</span>
+        <span class="token function">sshagent</span><span class="token punctuation">(</span><span class="token punctuation">[</span>sshkeyId<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token function">sh</span><span class="token punctuation">(</span><span class="token string">'''#!/bin/sh
+git submodule init
+git submodule update
+'''</span><span class="token punctuation">)</span>
+        <span class="token punctuation">}</span>
+        sh <span class="token string">'''#!/bin/sh
+npm install
+npm run hexo:clean
+'''</span>
+        echo <span class="token string">'构建完成.'</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>其中<code>sshkeyId</code>是自己配置的用户凭证id</p>
+<h3 id="部署"><a href="#部署" class="headerlink" title="部署"></a>部署</h3><p>部署也是通过持续集成来调用hexo的部署命令</p>
+<pre class=" language-groovy"><code class="language-groovy"><span class="token function">stage</span><span class="token punctuation">(</span><span class="token string">'部署'</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    steps <span class="token punctuation">{</span>
+        echo <span class="token string">'部署中...'</span>
+        <span class="token function">sshagent</span><span class="token punctuation">(</span><span class="token punctuation">[</span>sshkeyId<span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token function">sh</span><span class="token punctuation">(</span><span class="token string">'npm run hexo:deploy --generate'</span><span class="token punctuation">)</span>
+        <span class="token punctuation">}</span>
+        echo <span class="token string">'部署完成'</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p><code>sshagent</code>工具保证内部块ssh通信在其指定的环境(ssh通信自动使用sshagent的密钥对), 因为我这里部署到github page, 所以这里<code>sshkeyId</code>对应的是coding与github的密钥对</p>
+<h3 id="编写博客"><a href="#编写博客" class="headerlink" title="编写博客"></a>编写博客</h3><p>持续集成配置完成后, 本地写完markdown, 直接<code>git push</code>后自动部署到github page, 当然还可以通过其他持续集成工具, 比如<code>Travis CI</code>等, 为什么用coding, 免费的东西谁不喜欢 ~ ~.</p>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="false">
+                <source type="audio/mpeg" src="/mp3/DeliciousWay.mp3">
+            </audio>
+            
+        </div>
+        
+    <div id="gitalk-container" class="comment link" data-enable="true" data-ae="false" data-ci="2b187fd776304e5a0dc3" data-cs="0f570cdd6c2dd7fe20d51162ace23bc85131c84c" data-r="liuchenx.github.io" data-o="liuchenx" data-a="liuchenx" data-d="false">查看评论</div>
+
+
+    </div>
+    
+</div>
+
+
+
+    </div>
+</div>
+
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+<script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
+
+
+
+
+
+<link rel="stylesheet" href="/photoswipe/photoswipe.css">
+<link rel="stylesheet" href="/photoswipe/default-skin/default-skin.css">
+
+
+
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<script type="text/javascript" src="/js/bundle.js"></script></body></html>

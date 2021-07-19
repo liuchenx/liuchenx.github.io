@@ -1,0 +1,255 @@
+<!DOCTYPE html><html lang="en" class="loading"><head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>在HarmonyOS中使用Picasso - LIU YICHEN</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google" content="notranslate">
+
+    <!-- <link rel="shortcut icon" href=" /img/favicon.ico" /> -->
+    
+<link rel="stylesheet" href="/css/scrollbar.css">
+
+    <meta name="keywords" content="live,"> 
+    <meta name="description" content="自从HarmonyOS2.0发布以来，各种争论从来没有断过，但是发现HarmonyOS上能无缝使用android的apk和HarmonyOS的hap，关于HarmonyOS的hap是如何运行的就有了,"> 
+    <meta name="author" content="liuyichen"> 
+    <link rel="alternative" href="atom.xml" title="LIU YICHEN" type="application/atom+xml"> 
+    <link rel="icon" href="/img/favicon.ico"> 
+    
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.css">
+
+    
+<link rel="stylesheet" href="/css/diaspora.css">
+
+  
+
+<meta name="generator" content="Hexo 4.2.0"><link rel="stylesheet" href="/css/prism-material-oceanic.css" type="text/css"></head>
+
+<body class="loading">
+    <span id="config-title" style="display:none">LIU YICHEN</span>
+    <div id="loader"></div>
+    <div id="single">
+    <div id="top" style="display: block;">
+    <div class="bar" style="width: 0;"></div>
+    <a class="iconfont icon-home image-icon" href="javascript:;" data-url="https://blog.liuyichen.me"></a>
+    <div title="播放/暂停" class="iconfont icon-play"></div>
+    <h3 class="subtitle">在HarmonyOS中使用Picasso</h3>
+    <div class="social">
+        <div>
+            <div class="share">
+                <a title="获取二维码" class="iconfont icon-scan" href="javascript:;"></a>
+            </div>
+            <div id="qr"></div>
+        </div>
+    </div>
+    <div class="scrollbar"></div>
+</div>
+
+    <div class="section">
+        <div class="article">
+    <div class="main">
+        <h1 class="title">在HarmonyOS中使用Picasso</h1>
+        <div class="stuff">
+            <span>七月 19, 2021</span>
+            
+
+        </div>
+        <div class="content markdown">
+            <p>自从HarmonyOS2.0发布以来，各种争论从来没有断过，但是发现HarmonyOS上能无缝使用android的apk和HarmonyOS的hap，关于HarmonyOS的hap是如何运行的就有了一个大概猜测(应该还是运行在android上，做了一些桥接工作，毕竟在这么短的时间来搞出一个全新的系统不现实)，正在最近在学习HarmonyOS的相关api，发现图片加载库居然没有， 需要自己造轮子，于是想着能不能通过使用android的图片加载库来印证自己的想法</p>
+<p>android的图片加载库需要android的运行环境，如果能成功在HarmonyOS的App上跑起来的话，就能直接证明鸿蒙app就是运行在android之上</p>
+<p>因为android 的类最终优化打包成dex文件，然后通过classloader进行加载，于是想着鸿蒙的类加载是否会有不同，通过断点调试查看鸿蒙的clasloader：</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719220535939.png" alt="image-20210719220535939"></p>
+<p>我们知道PathClassloader是通过DexBaseClassLoader继承而来，成员DexPathList对象中的dexElements用来存放apk的dex路径，一些热修方案就是通过将热修包的dex插入到dexElements中实现的功能热修复，从断点上看，鸿蒙应用的加载与android应用没有任何区别，dexElements中发现base.apk和应用本身的hap包，大胆推测应该是在hap安装时对hap生成相应的base.apk包，作为壳工程来负责桥接android运行时api（与应用加壳的原理有点像）,如果确实如推测，那么鸿蒙的hap完全就是运行在android上，能使用android的图片加载就理所当然了</p>
+<p>于是开始尝试使用android的图片加载库，这里选择Picasso的1.0版本，原因是相对与Glide，Fresco等库，Picasso的api相对简单，代码量更少，选择1.0原因是没有多余的特殊逻辑，但是图片加载的三级缓存等逻辑一样不少</p>
+<p>Picasso加载图片的方法有两个：</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">into</span><span class="token punctuation">(</span>Target target<span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
+<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">into</span><span class="token punctuation">(</span>ImageView target<span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span></code></pre>
+<p>使用ImageView肯定不行ImageView是android控件，鸿蒙这边布局使用的是独立一套UI，所以这里选择使用Target方法，直接监听图片加载结果：</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719222302766.png" alt="image-20210719222302766"></p>
+<p>即便如此，这里仍然遇到两个问题</p>
+<ol>
+<li><p>Picasso需要android的Context对象</p>
+</li>
+<li><p>Target回调给出的Bitmap对象</p>
+</li>
+</ol>
+<p>对于第一个问题，如果鸿蒙应用最终运行的就是android，那么我们应该是能获取到Context对象的，于是断点查看鸿蒙应用的context(不是android的Context)里面有什么：</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719222704692.png" alt="image-20210719222704692"></p>
+<p>其中类型为MainAbilityShellActivity，这个应该就是页面作为桥接的Activity了，既然有android的context，那么我们可以通过反射获取到，这里就直接反射abilityShellContext对象：</p>
+<pre class=" language-java"><code class="language-java">   <span class="token keyword">static</span> Object <span class="token function">getRealContext</span><span class="token punctuation">(</span>Context c<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+        Context context <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token punctuation">(</span>AbilitySlice<span class="token punctuation">)</span> c<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getContext</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        Field contextField <span class="token operator">=</span> null<span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">{</span>
+            contextField <span class="token operator">=</span> context<span class="token punctuation">.</span><span class="token function">getClass</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getDeclaredField</span><span class="token punctuation">(</span><span class="token string">"abilityShellContext"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            contextField<span class="token punctuation">.</span><span class="token function">setAccessible</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            Object realContext <span class="token operator">=</span> contextField<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span>context<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token keyword">return</span> realContext<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">NoSuchFieldException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">IllegalAccessException</span> e<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+
+        <span class="token keyword">return</span> null<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span></code></pre>
+<p>反射后发现这里编译不过：</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719223102650.png" alt="image-20210719223102650"></p>
+<p>因为Picasso的with方法需要android的Context对象传入，而我们的鸿蒙编译环境是获取不到android的Context的，虽然编译获取不到，但是我们运行时有， 所以这里可以自己写个类占坑，于是创建一个占坑的依赖库：</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719223610620.png" alt="image-20210719223610620"></p>
+<p>类空实现就行，保证我们编译能过，运行时会自动从真实android对象读，然后依赖中使用compileOnly，在编译时生效，相当于c的头文件作用，不然运行时或有类加载冲突</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719223750298.png" alt="image-20210719223750298"></p>
+<p>同理, 问题2的bitmap相同的方式处理：</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719224039707.png" alt="image-20210719224039707"></p>
+<p>发现编译已经ok</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719224129367.png" alt="image-20210719224129367"></p>
+<p>但是这样并不能编译成功，因为Picasso还依赖其他android组件，需要都创建占坑：</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719224308780.png" alt="image-20210719224308780"></p>
+<p>这样创建完毕后，编译没问题了，但是Target返回的Bitmap对象，而鸿蒙中的位图对象是PixelMap，这里需要将Bitmap转成字节数组然后再转换成鸿蒙PixelMap，通过鸿蒙的Image控件进行加载：</p>
+<pre class=" language-java"><code class="language-java">  Picasso<span class="token punctuation">.</span><span class="token function">with</span><span class="token punctuation">(</span><span class="token punctuation">(</span>android<span class="token punctuation">.</span>content<span class="token punctuation">.</span>Context<span class="token punctuation">)</span> <span class="token function">getRealContext</span><span class="token punctuation">(</span>abilitySlice<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">load</span><span class="token punctuation">(</span>sampleItem<span class="token punctuation">.</span>image<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">into</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Target</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token annotation punctuation">@Override</span>
+                <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onSuccess</span><span class="token punctuation">(</span>android<span class="token punctuation">.</span>graphics<span class="token punctuation">.</span>Bitmap bitmap<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+                    ByteArrayOutputStream baos <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ByteArrayOutputStream</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    bitmap<span class="token punctuation">.</span><span class="token function">compress</span><span class="token punctuation">(</span>Bitmap<span class="token punctuation">.</span>CompressFormat<span class="token punctuation">.</span>JPEG<span class="token punctuation">,</span> <span class="token number">100</span><span class="token punctuation">,</span> baos<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> data <span class="token operator">=</span> baos<span class="token punctuation">.</span><span class="token function">toByteArray</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+                    ImageSource imageSource <span class="token operator">=</span> ImageSource<span class="token punctuation">.</span><span class="token function">create</span><span class="token punctuation">(</span>data<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">ImageSource<span class="token punctuation">.</span>SourceOptions</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    PixelMap pixelMap <span class="token operator">=</span> imageSource<span class="token punctuation">.</span><span class="token function">createPixelmap</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ImageSource<span class="token punctuation">.</span>DecodingOptions</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    image<span class="token punctuation">.</span><span class="token function">setPixelMap</span><span class="token punctuation">(</span>pixelMap<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                    HiLog<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span>label<span class="token punctuation">,</span> <span class="token string">"-------------Picasso onSuccess-------------: "</span> <span class="token operator">+</span> pixelMap<span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span>
+
+                <span class="token annotation punctuation">@Override</span>
+                <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">onError</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                    HiLog<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span>label<span class="token punctuation">,</span> <span class="token string">"-------------Picasso onError-------------"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>因为这里需要用到Bitmap的方法compress和枚举CompressFormat所以占坑类也要加载compress方法和枚举：</p>
+<pre class=" language-java"><code class="language-java"><span class="token keyword">package</span> android<span class="token punctuation">.</span>graphics<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>OutputStream<span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">Bitmap</span> <span class="token punctuation">{</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">boolean</span> <span class="token function">compress</span><span class="token punctuation">(</span>CompressFormat format<span class="token punctuation">,</span> <span class="token keyword">int</span> quality<span class="token punctuation">,</span> OutputStream stream<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+
+        <span class="token keyword">return</span> <span class="token boolean">false</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">enum</span> CompressFormat <span class="token punctuation">{</span>
+
+        <span class="token function">JPEG</span>          <span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+
+        <span class="token annotation punctuation">@Deprecated</span>
+        <span class="token function">WEBP</span>          <span class="token punctuation">(</span><span class="token number">2</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+
+        <span class="token function">WEBP_LOSSY</span>    <span class="token punctuation">(</span><span class="token number">3</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+
+        <span class="token function">WEBP_LOSSLESS</span> <span class="token punctuation">(</span><span class="token number">4</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token function">CompressFormat</span><span class="token punctuation">(</span><span class="token keyword">int</span> nativeInt<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">this</span><span class="token punctuation">.</span>nativeInt <span class="token operator">=</span> nativeInt<span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token keyword">final</span> <span class="token keyword">int</span> nativeInt<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+<p>然后点击运行：</p>
+<p><img src="/2021/07/19/%E5%9C%A8HarmonyOS%E4%B8%AD%E4%BD%BF%E7%94%A8Picasso/image-20210719225047575.png" alt="image-20210719225047575"></p>
+<p>可以看到通过picasso加载的图片能正常展示了</p>
+<h4 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h4><p>在手机上目前鸿蒙应用还是运行在android上，通过桥接与android 运行时关联,  不过目前鸿蒙的一些基本api还算比较全，后面逐步替换掉android布局也说不定，对于鸿蒙应用本身来说是无感知的</p>
+
+            <!--[if lt IE 9]><script>document.createElement('audio');</script><![endif]-->
+            <audio id="audio" loop="1" preload="auto" controls="controls" data-autoplay="false">
+                <source type="audio/mpeg" src="./mp3/DeliciousWay.mp3">
+            </audio>
+            
+        </div>
+        
+    <div id="gitalk-container" class="comment link" data-enable="true" data-ae="false" data-ci="2b187fd776304e5a0dc3" data-cs="0f570cdd6c2dd7fe20d51162ace23bc85131c84c" data-r="liuchenx.github.io" data-o="liuchenx" data-a="liuchenx" data-d="false">查看评论</div>
+
+
+    </div>
+    
+</div>
+
+
+
+    </div>
+</div>
+
+
+<script src="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js"></script>
+
+
+<script src="//lib.baomitu.com/jquery/1.8.3/jquery.min.js"></script>
+
+
+
+
+
+<link rel="stylesheet" href="/photoswipe/photoswipe.css">
+<link rel="stylesheet" href="/photoswipe/default-skin/default-skin.css">
+
+
+
+
+
+
+<!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <!--  Controls are self-explanatory. Order can be changed. -->
+                <div class="pswp__counter"></div>
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                      <div class="pswp__preloader__cut">
+                        <div class="pswp__preloader__donut"></div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div> 
+            </div>
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<script type="text/javascript" src="/js/bundle.js"></script></body></html>
